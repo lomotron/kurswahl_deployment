@@ -20,8 +20,9 @@ ServerName {{ http_host }}
 
 {% if '443' == http_port %}
     SSLEngine on
-    SSLCertificateFile    /etc/ssl/certs/ssl-cert-snakeoil.pem
-    SSLCertificateKeyFile /etc/ssl/private/ssl-cert-snakeoil.key
+    SSLCertificateFile    /etc/letsencrypt/live/{{ http_host }}/fullchain.pem
+    SSLCertificateKeyFile /etc/letsencrypt/live/l{{ http_host }}/privkey.pem
+    Include /etc/letsencrypt/options-ssl-apache.conf
 {% endif %}
 
     <Directory /var/www/{{ http_host }}>
