@@ -1,0 +1,9 @@
+---
+mysql_root_password: "vogels"
+app_user: "www-data"
+email: "silvio.wolf@gmail.com"
+http_host: "lomotron.de"
+http_conf: "lomotron.httpd.conf"
+http_port: "443"
+disable_default: true
+account_private_key: "Test"

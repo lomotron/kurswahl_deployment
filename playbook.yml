@@ -1,0 +1,60 @@
+##################################################
+# DO Community Playbooks: LAMP on Ubuntu 18.04
+##################################################
+---
+- hosts: all
+  become: true
+  vars_files:
+    - vars/default.yml
+
+  tasks:
+    - name: Install Apache Packages
+      apt: name={{ item }} update_cache=yes state=latest
+      loop: [ 'apache2', 'php', 'libapache2-mod-php' , 'certbot' , 'python3-certbot-apache']
+
+    - name: Create Document root
+      file:
+        path: "/var/www/{{ http_host }}"
+        state: directory
+        owner: "{{ app_user }}"
+        mode: '0755'
+
+    - name: Set up Apache virtualhost
+      template:
+        src: "files/httpd.conf.j2"
+        dest: "/etc/apache2/sites-available/{{ http_conf }}"
+      notify: Reload Apache
+
+    - name: Enable new site
+      shell: /usr/sbin/a2ensite {{ http_conf }}
+      notify: Reload Apache
+
+    - name: Disable default Apache site
+      shell: /usr/sbin/a2dissite 000-default.conf
+      when: disable_default
+      notify: Reload Apache
+
+    - name: Install Apache ssl module
+      when: http_port == "443"
+      shell: "/usr/sbin/a2enmod ssl"
+      notify: Reload Apache
+
+    - name: Copies sources
+      copy: 
+        owner: "{{ app_user }}"
+        src: "../src/" 
+        dest: "/var/www/{{ http_host }}"
+
+    - name: Install certificates
+      when: http_port == "443"
+      shell: "certbot --agree-tos --email {{ email }} --apache -d {{ http_host }} -n"
+  handlers:
+    - name: Reload Apache
+      service:
+        name: apache2
+        state: reloaded
+
+    - name: Restart Apache
+      service:
+        name: apache2
+        state: restarted
